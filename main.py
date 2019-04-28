@@ -45,7 +45,7 @@ def result():
         User.edit(obj_id=user.id, email=None)
         return render_template("new-game.html", message=message)
     elif guess < 1 or guess > 30:
-        message = ("Choose number between 1 and 30")
+        message = ("You didn't enter a number between 1 and 30")
         return render_template("result.html", message=message)
     elif guess > user.secret:
         message = ("Your guess is not correct... try something smaller")

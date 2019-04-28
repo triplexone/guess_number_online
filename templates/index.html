@@ -2,6 +2,7 @@
 
 {% block content %}
 {% if user and user.secret %}
+<p>Enter a number between 1 and 30</p>
     <form method="post" action="/result">
         <input type="text" name="guess" placeholder="Enter your guess">
         <br>
@@ -9,9 +10,11 @@
         <button type="submit">Submit</button>
     </form>
 {% else %}
+<p>Welcome to GUESS THE SECRET NUMBER!</p>
+<p>Please enter your name and e-mail</p>
     <form method="post" action="/login">
         <input type="text" name="user-name" placeholder="Enter your name"><br>
-        <input type="email" name="user-email" placeholder="Enter your email address"><br>
+                <input type="email" name="user-email" placeholder="Enter your email address"><br>
 
         <button>Submit</button>
     </form>
