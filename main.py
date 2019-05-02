@@ -3,14 +3,15 @@ from models import User
 import random
 
 app = Flask(__name__)
-
+attempts = 0
 
 @app.route("/", methods=["GET"])
 def index():
-    email_address = request.cookies.get("email")
 
-    if email_address:
-        user = User.fetch_one(query=["email", "==", email_address])
+    user_name = request.cookies.get("name")
+
+    if user_name:
+        user = User.fetch_one(query=["name", "==", user_name])
     else:
         user = None
 
@@ -19,17 +20,15 @@ def index():
 @app.route("/login", methods=["POST"])
 def login():
     name = request.form.get("user-name")
-    email = request.form.get("user-email")
     secret = random.randint(1, 30)
-
-    user = User.fetch_one(query=["email", "==", email])
+    user = User.fetch_one(query=["name", "==", name])
 
     if not user:
-        user = User(name=name, email=email, secret=secret)
+        user = User(name=name, secret=secret)
         user.create()
 
     response = make_response(redirect(url_for('index')))
-    response.set_cookie("email", email)
+    response.set_cookie("name", name)
 
     return response
 
@@ -37,15 +36,20 @@ def login():
 def result():
     while True:
         try:
+            global attempts
+            attempts += 1
             guess = int(request.form.get("guess"))
-            email_address = request.cookies.get("email")
-
-            user = User.fetch_one(query=["email", "==", email_address])
+            user_name = request.cookies.get("name")
+            new_secret = random.randint(1, 30)
+            user = User.fetch_one(query=["name", "==", user_name])
 
             if guess == user.secret:
-                message = ("You've guessed it {1} - congratulations! It's number {0}").format(guess, user.name)
-                User.edit(obj_id=user.id, email=None)
-                return render_template("new-game.html", message=message)
+                message = ("You've guessed it {1} - congratulations! It's number {0}. Attempts {2}").format(guess, user.name, attempts)
+                response = make_response(render_template("new-game.html", message=message))
+                response.delete_cookie("name")
+                User.edit(obj_id=user.id, secret=new_secret, attempts=attempts)
+                attempts = 0
+                return response
                 break
             elif guess < 1 or guess > 30:
                 message = ("You didn't enter a number between 1 and 30")
@@ -61,6 +65,14 @@ def result():
             return render_template("result.html", message=message)
             continue
 
+
+@app.route("/end-game")
+def end_game():
+    return render_template("end-game.html")
+
+@app.route("/top-score-table")
+def top_score_table():
+    return render_template("top-score-table.html")
 
 if __name__ == '__main__':
     app.run()
